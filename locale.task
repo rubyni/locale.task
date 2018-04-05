@@ -1,0 +1,66 @@
+# frozen_string_literal: true
+
+desc 'create a static javascript translation file with each language available as a JSON object'
+task jslang: :environment do
+  start = Time.now
+
+  # Available languages
+  languages  = %w(es en)
+
+  # files from directory config/locales
+  files = Dir.glob("#{Rails.root.join('config', 'locales')}/**/*")
+
+  # to store hashes
+  output = {}
+
+  # An object is generated for each language
+  languages.each do |language|
+
+    # create new hash to store yml hashes
+    hash = {}
+
+    # each all files
+    files.each do |file|
+
+      # set file name without extension
+      name = File.basename(file, '.yml')
+
+      # work only for language
+      if name.end_with?(language)
+
+        # load yml file
+        lang_file = YAML.load(File.open(file)).symbolize_keys
+
+        # merge yml in hash file
+        hash = hash.deep_merge(lang_file)
+      end
+    end
+
+    # merge language hash
+    output = output.deep_merge(hash)
+  end
+
+  # namespace for js file
+  namespace = 'lang'
+
+  # get path from js file
+  js_file_path = Rails.root.join('app', 'assets', 'javascripts', 'i18n.js')
+
+  # delete old file
+  FileUtils.rm_f(js_file_path)
+
+  # allow write file
+  js_file = File.new(js_file_path, 'w')
+
+  # write data in file
+  js_file.write("var #{namespace} = #{output.to_json};")
+
+  # close file
+  js_file.close
+
+  finish = Time.now
+
+  execution_time = ((finish - start) * 1000)
+
+  puts "i18n.js created in #{execution_time} milliseconds."
+end
