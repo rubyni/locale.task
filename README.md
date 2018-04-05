@@ -1,6 +1,6 @@
 # locale.task
 
-
+Task for rails to generate i18n.js based all locale yml files.
 
 ## Install
 
